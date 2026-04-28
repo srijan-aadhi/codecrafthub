@@ -11,6 +11,36 @@ const DATA_FILE = path.join(__dirname, "courses.json");
 // Allowed status values for a course.
 const ALLOWED_STATUSES = ["Not Started", "In Progress", "Completed"];
 
+/**
+ * CORS + Private Network Access (PNA) middleware.
+ * This allows browser requests from external lab domains to your local API.
+ */
+app.use((req, res, next) => {
+  const requestOrigin = req.headers.origin;
+
+  // Reflect request origin so browser accepts cross-origin API calls.
+  if (requestOrigin) {
+    res.setHeader("Access-Control-Allow-Origin", requestOrigin);
+    res.setHeader("Vary", "Origin");
+  } else {
+    // For non-browser requests (no Origin header), allow all.
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
+
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  // Important for Chrome's Private Network Access preflight checks.
+  res.setHeader("Access-Control-Allow-Private-Network", "true");
+
+  // Handle preflight requests immediately.
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
+
 // Middleware to parse JSON request bodies.
 app.use(express.json());
 
